@@ -1,3 +1,5 @@
+// reference: https://felginep.github.io/2019-02-19/uiview-styling-with-functions
+
 import UIKit
 
 infix operator +
