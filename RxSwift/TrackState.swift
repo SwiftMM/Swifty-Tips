@@ -1,10 +1,13 @@
 import RxSwift
 
+public typealias State = PublishRelay<UIState>
+
 public enum UIState {
     case idle
     case loading(String?)
     case success(String?)
     case failure(String?)
+    case completed
     
     public var isSuccess: Bool {
         switch self {
@@ -55,26 +58,30 @@ public extension ObservableConvertibleType {
     ///   - success: 成功提示信息
     ///   - failure: 失败提示信息
     /// - Returns: 绑定的序列
-    func trackState(_ relay: PublishRelay<UIState>,
-                    loading: Loading = .start(nil),
-                    success: String? = nil,
-                    failure: @escaping (Error) -> String? = { _ in nil }) -> Observable<E> {
+    func trackState(
+        _ state: State,
+        loading: Loading = .start(nil),
+        success: String? = nil,
+        failure: @escaping (Error) -> String? = { _ in nil }
+        )
+        -> Observable<E>
+    {
         return Observable.using({ () -> UIStateToken<E> in
             switch loading {
             case .none:
                 break
             case .start(let text):
-                relay.accept(.loading(text))
+                state.accept(.loading(text))
             }
             
             return UIStateToken(source: self.asObservable())
         }, observableFactory: {
             return $0.asObservable().do(onNext: { _ in
-                relay.accept(.success(success))
+                state.accept(.success(success))
             }, onError: {
-                relay.accept(.failure(failure($0)))
+                state.accept(.failure(failure($0)))
             }, onCompleted: {
-                relay.accept(.success(nil))
+                state.accept(.completed)
             })
         })
     }
