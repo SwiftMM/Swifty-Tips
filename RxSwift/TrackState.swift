@@ -33,6 +33,10 @@ public enum Loading {
     case start(String?)
 }
 
+public protocol ErrorMessageConvertible: Error {
+    var errorMessage: String { get }
+}
+
 struct UIStateToken<E>: Disposable {
     
     private let _source: Observable<E>
@@ -62,7 +66,7 @@ public extension ObservableConvertibleType {
         _ state: State,
         loading: Loading = .start(nil),
         success: String? = nil,
-        failure: @escaping (Error) -> String? = { _ in nil }
+        failure: @escaping (ErrorMessageConvertible) -> String? = { $0.errorMessage }
         )
         -> Observable<E>
     {
